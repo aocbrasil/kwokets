@@ -9,6 +9,8 @@ RUN apk add --no-cache nginx postgresql-dev libpq gettext \
 COPY api/      /var/www/api/
 COPY cron/     /var/www/cron/
 COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Storage directory (mount a volume over this in production)
 RUN mkdir -p /var/www/storage/attachments \
@@ -16,6 +18,6 @@ RUN mkdir -p /var/www/storage/attachments \
 
 WORKDIR /var/www
 
-EXPOSE $PORT
+EXPOSE 8080
 
-CMD sh -c "php-fpm -D && envsubst '\$PORT' < /etc/nginx/nginx.conf > /tmp/nginx.conf && nginx -c /tmp/nginx.conf -g 'daemon off;'"
+CMD ["/entrypoint.sh"]
