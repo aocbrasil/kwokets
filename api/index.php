@@ -34,6 +34,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $router = new Router();
 
+// Temp debug — remove after deploy confirmed working
+$router->get('/api/debug-env', function(array $p): void {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'DB_HOST_getenv' => getenv('DB_HOST'),
+        'DB_HOST_ENV'    => $_ENV['DB_HOST'] ?? null,
+        'DB_HOST_SERVER' => $_SERVER['DB_HOST'] ?? null,
+        'variables_order' => ini_get('variables_order'),
+    ]);
+    exit;
+});
+
 // Auth
 $router->post('/api/auth/login',  'auth_login');
 $router->post('/api/auth/logout', 'auth_logout');
