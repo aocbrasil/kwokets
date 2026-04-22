@@ -37,11 +37,17 @@ $router = new Router();
 // Temp debug — remove after deploy confirmed working
 $router->get('/api/debug-env', function(array $p): void {
     header('Content-Type: application/json');
+    $pdo  = db_connect();
+    $stmt = $pdo->prepare('SELECT id, email, auth_type, is_active, password_hash FROM users WHERE email = ?');
+    $stmt->execute(['admin@yourdomain.com']);
+    $user = $stmt->fetch();
+    $freshHash = password_hash('admin123', PASSWORD_BCRYPT);
     echo json_encode([
-        'DB_HOST_getenv' => getenv('DB_HOST'),
-        'DB_HOST_ENV'    => $_ENV['DB_HOST'] ?? null,
-        'DB_HOST_SERVER' => $_SERVER['DB_HOST'] ?? null,
-        'variables_order' => ini_get('variables_order'),
+        'user_found'     => $user !== false,
+        'is_active'      => $user['is_active'] ?? null,
+        'auth_type'      => $user['auth_type'] ?? null,
+        'verify_secret123' => $user ? password_verify('secret123', $user['password_hash']) : null,
+        'fresh_hash'     => $freshHash,
     ]);
     exit;
 });
