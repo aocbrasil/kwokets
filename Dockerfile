@@ -16,4 +16,4 @@ WORKDIR /var/www/api
 
 EXPOSE 8080
 
-CMD sh -c "php -S 0.0.0.0:${PORT:-8080} index.php"
+CMD sh -c "echo Starting on port $PORT && php -S 0.0.0.0:${PORT:-8080} index.php"
