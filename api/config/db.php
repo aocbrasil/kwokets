@@ -16,7 +16,7 @@ function db_connect(): PDO
     $user   = getenv('DB_USER')   ?: ($_ENV['DB_USER']   ?? $_SERVER['DB_USER']   ?? 'ticketing');
     $pass   = getenv('DB_PASS')   ?: ($_ENV['DB_PASS']   ?? $_SERVER['DB_PASS']   ?? '');
 
-    $dsn = "pgsql:host={$host};port={$port};dbname={$name}";
+    $dsn = "pgsql:host={$host};port={$port};dbname={$name};sslmode=require";
 
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
