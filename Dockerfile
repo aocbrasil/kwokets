@@ -1,8 +1,9 @@
 FROM php:8.2-fpm-alpine
 
 # Install PostgreSQL driver + nginx
-RUN apk add --no-cache nginx \
- && docker-php-ext-install pdo pdo_pgsql
+RUN apk add --no-cache nginx postgresql-dev \
+ && docker-php-ext-install pdo pdo_pgsql \
+ && apk del postgresql-dev
 
 # Copy application
 COPY api/      /var/www/api/
