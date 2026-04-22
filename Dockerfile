@@ -1,7 +1,7 @@
 FROM php:8.2-fpm-alpine
 
 # Install PostgreSQL driver + nginx
-RUN apk add --no-cache nginx postgresql-dev libpq \
+RUN apk add --no-cache nginx postgresql-dev libpq gettext \
  && docker-php-ext-install pdo pdo_pgsql \
  && apk del postgresql-dev
 
@@ -16,6 +16,6 @@ RUN mkdir -p /var/www/storage/attachments \
 
 WORKDIR /var/www
 
-EXPOSE 80
+EXPOSE $PORT
 
-CMD sh -c "php-fpm -D && nginx -g 'daemon off;'"
+CMD sh -c "php-fpm -D && envsubst '\$PORT' < /etc/nginx/nginx.conf > /tmp/nginx.conf && nginx -c /tmp/nginx.conf -g 'daemon off;'"
