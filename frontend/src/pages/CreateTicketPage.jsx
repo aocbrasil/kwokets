@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024 // 100 MB
+
+const TIER_LABELS = { basic: 'Basic', standard: 'Standard', prime: 'Prime' }
 
 export default function CreateTicketPage() {
   const navigate = useNavigate()
@@ -10,11 +12,24 @@ export default function CreateTicketPage() {
   const [subject,     setSubject]     = useState('')
   const [description, setDescription] = useState('')
   const [priority,    setPriority]    = useState('p3')
+  const [contractId,  setContractId]  = useState('')
+  const [contracts,   setContracts]   = useState([])
+  const [contractsLoading, setContractsLoading] = useState(true)
   const [files,       setFiles]       = useState([])
   const [error,       setError]       = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [loading,     setLoading]     = useState(false)
   const fileRef = useRef(null)
+
+  useEffect(() => {
+    api.myContracts()
+      .then(data => {
+        setContracts(data.contracts)
+        if (data.contracts.length === 1) setContractId(String(data.contracts[0].id))
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setContractsLoading(false))
+  }, [])
 
   function handleFiles(e) {
     const chosen = Array.from(e.target.files)
@@ -42,11 +57,12 @@ export default function CreateTicketPage() {
     const errs = {}
     if (!subject.trim())     errs.subject     = 'Required'
     if (!description.trim()) errs.description = 'Required'
+    if (!contractId)         errs.contract    = 'Required'
     if (Object.keys(errs).length) { setFieldErrors(errs); return }
 
     setLoading(true)
     try {
-      const ticket = await api.createTicket({ subject, description, priority })
+      const ticket = await api.createTicket({ subject, description, priority, contract_id: Number(contractId) })
 
       // Upload attachments sequentially
       for (const file of files) {
@@ -77,7 +93,41 @@ export default function CreateTicketPage() {
         <div className="card-body">
           {error && <div className="alert alert-error">{error}</div>}
 
+          {/* No active contract warning */}
+          {!contractsLoading && contracts.length === 0 && (
+            <div className="alert alert-error" style={{ marginBottom: 16 }}>
+              No active contract found for your account. Please contact your account manager before opening a ticket.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
+            {/* Contract selector */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="contract">Support Contract *</label>
+              {contractsLoading ? (
+                <span className="spinner" />
+              ) : contracts.length === 1 ? (
+                <div style={{ fontSize: 14, padding: '8px 0' }}>
+                  <strong style={{ fontFamily: 'monospace' }}>{contracts[0].contract_code}</strong>
+                  {' '}
+                  <span style={{ fontSize: 12, color: 'var(--color-muted)', textTransform: 'capitalize' }}>
+                    ({TIER_LABELS[contracts[0].tier] ?? contracts[0].tier})
+                  </span>
+                </div>
+              ) : (
+                <select id="contract" className="form-control" value={contractId}
+                  onChange={e => setContractId(e.target.value)}>
+                  <option value="">— Select contract —</option>
+                  {contracts.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.contract_code} ({TIER_LABELS[c.tier] ?? c.tier})
+                    </option>
+                  ))}
+                </select>
+              )}
+              {fieldErrors.contract && <div className="form-error">{fieldErrors.contract}</div>}
+            </div>
+
             <div className="form-group">
               <label className="form-label" htmlFor="subject">Subject</label>
               <input
@@ -165,7 +215,7 @@ export default function CreateTicketPage() {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={loading}
+                disabled={loading || contractsLoading || contracts.length === 0}
               >
                 {loading ? <><span className="spinner" /> Submitting…</> : 'Submit Ticket'}
               </button>

@@ -62,6 +62,33 @@ function contracts_list(array $params): void
 }
 
 /* -----------------------------------------------------------------------
+ * Active contracts for the authenticated customer's tenant
+ * -------------------------------------------------------------------- */
+
+function contracts_my(array $params): void
+{
+    $user = require_auth();
+
+    if ($user['role'] !== 'customer') {
+        error_response('Forbidden', 403);
+    }
+
+    $tenantId = (int)$user['tenant_id'];
+    $pdo      = db_connect();
+
+    $stmt = $pdo->prepare(
+        "SELECT id, contract_code, tier, start_date, end_date, notes
+         FROM tenant_contracts
+         WHERE tenant_id = ? AND is_active = TRUE
+         ORDER BY created_at DESC"
+    );
+    $stmt->execute([$tenantId]);
+    $contracts = $stmt->fetchAll();
+
+    json_response(['contracts' => $contracts]);
+}
+
+/* -----------------------------------------------------------------------
  * Create a contract (with optional SLA rules)
  * -------------------------------------------------------------------- */
 

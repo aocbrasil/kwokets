@@ -85,6 +85,7 @@ export const api = {
   },
 
   // Contracts
+  myContracts:        ()                     => request('GET',    '/contracts/my'),
   listContracts:      (tenantId)             => request('GET',    `/tenants/${tenantId}/contracts`),
   createContract:     (tenantId, data)       => request('POST',   `/tenants/${tenantId}/contracts`, data),
   updateContract:     (tenantId, cid, data)  => request('PATCH',  `/tenants/${tenantId}/contracts/${cid}`, data),

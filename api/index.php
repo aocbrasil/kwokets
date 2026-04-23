@@ -71,6 +71,7 @@ $router->get('/api/users/:id',                          'users_get');
 $router->patch('/api/users/:id',                        'users_update');
 
 // Contracts
+$router->get('/api/contracts/my',                             'contracts_my');
 $router->get('/api/tenants/:id/contracts',                    'contracts_list');
 $router->post('/api/tenants/:id/contracts',                   'contracts_create');
 $router->patch('/api/tenants/:id/contracts/:contract_id',     'contracts_update');

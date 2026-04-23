@@ -121,15 +121,26 @@ function tickets_create(array $params): void
     $stmt->execute([$tenantId]);
     if (!$stmt->fetch()) not_found('Tenant not found');
 
+    // Contract validation (required for customers)
+    $contractId = isset($body['contract_id']) ? (int)$body['contract_id'] : null;
+    if ($user['role'] === 'customer') {
+        if (!$contractId) error_response('contract_id required', 400);
+        $cs = $pdo->prepare(
+            'SELECT id FROM tenant_contracts WHERE id = ? AND tenant_id = ? AND is_active = TRUE'
+        );
+        $cs->execute([$contractId, $tenantId]);
+        if (!$cs->fetch()) error_response('Contract not found or not active', 400);
+    }
+
     $pdo->beginTransaction();
 
     try {
         $stmt = $pdo->prepare(
-            "INSERT INTO tickets (tenant_id, subject, description, priority, created_by_user_id, source)
-             VALUES (?, ?, ?, ?, ?, 'web')
+            "INSERT INTO tickets (tenant_id, subject, description, priority, created_by_user_id, source, contract_id)
+             VALUES (?, ?, ?, ?, ?, 'web', ?)
              RETURNING id, created_at"
         );
-        $stmt->execute([$tenantId, $subject, $description, $priority, $user['id']]);
+        $stmt->execute([$tenantId, $subject, $description, $priority, $user['id'], $contractId]);
         $ticket = $stmt->fetch();
 
         // Log initial status
