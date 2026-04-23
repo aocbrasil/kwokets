@@ -84,6 +84,14 @@ export const api = {
     return `${BASE}/attachments/${attachmentId}${token ? '?token=' + encodeURIComponent(token) : ''}`
   },
 
+  // Contracts
+  listContracts:      (tenantId)             => request('GET',    `/tenants/${tenantId}/contracts`),
+  createContract:     (tenantId, data)       => request('POST',   `/tenants/${tenantId}/contracts`, data),
+  updateContract:     (tenantId, cid, data)  => request('PATCH',  `/tenants/${tenantId}/contracts/${cid}`, data),
+  deleteContract:     (tenantId, cid)        => request('DELETE', `/tenants/${tenantId}/contracts/${cid}`),
+  activateContract:   (tenantId, cid)        => request('POST',   `/tenants/${tenantId}/contracts/${cid}/activate`),
+  deactivateContract: (tenantId, cid)        => request('POST',   `/tenants/${tenantId}/contracts/${cid}/deactivate`),
+
   // Search
   searchTickets: (q, limit = 30) =>
     request('GET', '/search?' + new URLSearchParams({ q, limit })),

@@ -20,6 +20,7 @@ require_once __DIR__ . '/controllers/tenants.php';
 require_once __DIR__ . '/controllers/users.php';
 require_once __DIR__ . '/controllers/notifications.php';
 require_once __DIR__ . '/controllers/search.php';
+require_once __DIR__ . '/controllers/contracts.php';
 
 // CORS headers
 $allowedOrigin = getenv('ALLOWED_ORIGIN') ?: '*';
@@ -33,24 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $router = new Router();
-
-// Temp debug — remove after deploy confirmed working
-$router->get('/api/debug-env', function(array $p): void {
-    header('Content-Type: application/json');
-    $pdo  = db_connect();
-    $stmt = $pdo->prepare('SELECT id, email, auth_type, is_active, password_hash FROM users WHERE email = ?');
-    $stmt->execute(['admin@yourdomain.com']);
-    $user = $stmt->fetch();
-    $freshHash = password_hash('admin123', PASSWORD_BCRYPT);
-    echo json_encode([
-        'user_found'     => $user !== false,
-        'is_active'      => $user['is_active'] ?? null,
-        'auth_type'      => $user['auth_type'] ?? null,
-        'verify_secret123' => $user ? password_verify('secret123', $user['password_hash']) : null,
-        'fresh_hash'     => $freshHash,
-    ]);
-    exit;
-});
 
 // Auth
 $router->post('/api/auth/login',  'auth_login');
@@ -86,6 +69,14 @@ $router->get('/api/users',                              'users_list');
 $router->post('/api/users',                             'users_create');
 $router->get('/api/users/:id',                          'users_get');
 $router->patch('/api/users/:id',                        'users_update');
+
+// Contracts
+$router->get('/api/tenants/:id/contracts',                    'contracts_list');
+$router->post('/api/tenants/:id/contracts',                   'contracts_create');
+$router->patch('/api/tenants/:id/contracts/:contract_id',     'contracts_update');
+$router->delete('/api/tenants/:id/contracts/:contract_id',    'contracts_delete');
+$router->post('/api/tenants/:id/contracts/:contract_id/activate',   'contracts_activate');
+$router->post('/api/tenants/:id/contracts/:contract_id/deactivate', 'contracts_deactivate');
 
 // Search
 $router->get('/api/search', 'search_tickets');
