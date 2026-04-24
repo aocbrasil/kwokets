@@ -5,13 +5,14 @@ declare(strict_types=1);
 // Valid status transitions
 // Full transitions (staff)
 const STATUS_TRANSITIONS = [
-    'open'             => ['ce_pending', 'close_pending', 'closed'],
-    'ce_pending'       => ['open', 'customer_pending', 'monitoring', 'resolved', 'close_pending', 'closed'],
-    'customer_pending' => ['ce_pending', 'resolved', 'close_pending', 'closed'],
-    'monitoring'       => ['ce_pending', 'resolved', 'close_pending', 'closed'],
-    'resolved'         => ['closed', 'open', 'close_pending'],
-    'close_pending'    => ['ce_pending', 'closed'],
-    'closed'           => [],
+    'open'                => ['ce_pending', 'close_pending', 'closed'],
+    'ce_pending'          => ['open', 'customer_pending', 'third_party_pending', 'monitoring', 'resolved', 'close_pending', 'closed'],
+    'customer_pending'    => ['ce_pending', 'resolved', 'close_pending', 'closed'],
+    'third_party_pending' => ['ce_pending', 'resolved', 'close_pending', 'closed'],
+    'monitoring'          => ['ce_pending', 'resolved', 'close_pending', 'closed'],
+    'resolved'            => ['closed', 'open', 'close_pending'],
+    'close_pending'       => ['ce_pending', 'closed'],
+    'closed'              => [],
 ];
 
 // Transitions customers are allowed to trigger
@@ -267,11 +268,12 @@ function tickets_update(array $params): void
         $statusLabels = [
             'open'             => 'Open',
             'ce_pending'       => 'CE Pending',
-            'customer_pending' => 'Customer Pending',
-            'monitoring'       => 'Monitoring',
-            'resolved'         => 'Resolved',
-            'close_pending'    => 'Closure Requested',
-            'closed'           => 'Closed',
+            'customer_pending'    => 'Customer Pending',
+            'third_party_pending' => '3rd Party Pending',
+            'monitoring'          => 'Monitoring',
+            'resolved'            => 'Resolved',
+            'close_pending'       => 'Closure Requested',
+            'closed'              => 'Closed',
         ];
         $fromLabel = $statusLabels[$oldStatus] ?? $oldStatus;
         $toLabel   = $statusLabels[$newStatus] ?? $newStatus;

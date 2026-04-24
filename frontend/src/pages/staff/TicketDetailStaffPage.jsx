@@ -10,23 +10,25 @@ const MAX_FILE_BYTES = 100 * 1024 * 1024
 
 // Valid transitions (mirrors backend)
 const STATUS_TRANSITIONS = {
-  open:             ['ce_pending', 'close_pending', 'closed'],
-  ce_pending:       ['open', 'customer_pending', 'monitoring', 'resolved', 'close_pending', 'closed'],
-  customer_pending: ['ce_pending', 'resolved', 'close_pending', 'closed'],
-  monitoring:       ['ce_pending', 'resolved', 'close_pending', 'closed'],
-  resolved:         ['closed', 'open', 'close_pending'],
-  close_pending:    ['ce_pending', 'closed'],
-  closed:           [],
+  open:                ['ce_pending', 'close_pending', 'closed'],
+  ce_pending:          ['open', 'customer_pending', 'third_party_pending', 'monitoring', 'resolved', 'close_pending', 'closed'],
+  customer_pending:    ['ce_pending', 'resolved', 'close_pending', 'closed'],
+  third_party_pending: ['ce_pending', 'resolved', 'close_pending', 'closed'],
+  monitoring:          ['ce_pending', 'resolved', 'close_pending', 'closed'],
+  resolved:            ['closed', 'open', 'close_pending'],
+  close_pending:       ['ce_pending', 'closed'],
+  closed:              [],
 }
 
 const STATUS_LABELS = {
-  open:             'Open',
-  ce_pending:       'CE Pending',
-  customer_pending: 'Customer Pending',
-  monitoring:       'Monitoring',
-  resolved:         'Resolved',
-  close_pending:    'Closure Requested',
-  closed:           'Closed',
+  open:                'Open',
+  ce_pending:          'CE Pending',
+  customer_pending:    'Customer Pending',
+  third_party_pending: '3rd Party Pending',
+  monitoring:          'Monitoring',
+  resolved:            'Resolved',
+  close_pending:       'Closure Requested',
+  closed:              'Closed',
 }
 
 const PRIORITY_LABELS = { p1: 'P1 — Critical', p2: 'P2 — High', p3: 'P3 — Medium', p4: 'P4 — Low' }

@@ -125,6 +125,6 @@ function sla_mark_first_response(int $ticketId): void
  */
 function sla_pausing_states(): array
 {
-    return ['customer_pending', 'monitoring', 'close_pending'];
+    return ['customer_pending', 'third_party_pending', 'monitoring', 'close_pending'];
 }
 // Note: ce_pending (active work state) does NOT pause the SLA clock.

@@ -21,8 +21,9 @@
   /* Status colours */
   --s-open:             #2563eb;
   --s-ce_pending:       #7c3aed;
-  --s-customer_pending: #d97706;
-  --s-monitoring:       #0891b2;
+  --s-customer_pending:    #d97706;
+  --s-third_party_pending: #c2410c;
+  --s-monitoring:          #0891b2;
   --s-resolved:         #16a34a;
   --s-close_pending:    #9333ea;
   --s-closed:           #718096;
@@ -183,8 +184,9 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 .badge-open             { background: #dbeafe; color: var(--s-open); }
 .badge-ce_pending       { background: #ede9fe; color: var(--s-ce_pending); }
-.badge-customer_pending { background: #fef3c7; color: var(--s-customer_pending); }
-.badge-monitoring       { background: #cffafe; color: var(--s-monitoring); }
+.badge-customer_pending    { background: #fef3c7; color: var(--s-customer_pending); }
+.badge-third_party_pending { background: #ffedd5; color: var(--s-third_party_pending); }
+.badge-monitoring          { background: #cffafe; color: var(--s-monitoring); }
 .badge-resolved         { background: #dcfce7; color: var(--s-resolved); }
 .badge-close_pending    { background: #f3e8ff; color: var(--s-close_pending); }
 .badge-closed           { background: #f1f5f9; color: var(--s-closed); }
