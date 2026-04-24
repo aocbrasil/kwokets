@@ -7,7 +7,7 @@ import PriorityBadge from '../../components/PriorityBadge'
 import SlaIndicator  from '../../components/SlaIndicator'
 
 // All active non-open states
-const BACKLOG_STATUSES = ['ce_pending', 'customer_pending', 'monitoring', 'close_pending', 'resolved']
+const BACKLOG_STATUSES = ['ce_pending', 'customer_pending', 'third_party_pending', 'monitoring', 'close_pending', 'resolved']
 const PRIORITIES       = ['p1', 'p2', 'p3', 'p4']
 const PAGE_SIZE        = 50
 const CLOSED_PAGE_SIZE = 100
@@ -184,7 +184,7 @@ export default function BacklogPage() {
                   <td><PriorityBadge priority={t.priority} /></td>
                   <td><StatusBadge status={t.status} /></td>
                   <td>
-                    {!['resolved', 'close_pending', 'customer_pending', 'monitoring'].includes(t.status) && (
+                    {!['resolved', 'close_pending', 'customer_pending', 'third_party_pending', 'monitoring'].includes(t.status) && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <SlaIndicator
                           label="1st resp"
