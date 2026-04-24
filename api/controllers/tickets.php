@@ -143,6 +143,12 @@ function tickets_create(array $params): void
         $stmt->execute([$tenantId, $subject, $description, $priority, $user['id'], $contractId]);
         $ticket = $stmt->fetch();
 
+        // Store description as first message in the thread
+        $pdo->prepare(
+            "INSERT INTO ticket_messages (ticket_id, user_id, body, is_internal, source)
+             VALUES (?, ?, ?, FALSE, 'web')"
+        )->execute([$ticket['id'], $user['id'], $description]);
+
         // Log initial status
         $pdo->prepare(
             'INSERT INTO ticket_status_log (ticket_id, changed_by_user_id, old_status, new_status)

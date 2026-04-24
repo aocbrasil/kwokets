@@ -13,7 +13,8 @@ export default function CreateTicketPage() {
   const [description, setDescription] = useState('')
   const [priority,    setPriority]    = useState('p3')
   const [contractId,  setContractId]  = useState('')
-  const [contracts,   setContracts]   = useState([])
+  const [active,      setActive]      = useState([])
+  const [inactive,    setInactive]    = useState([])
   const [contractsLoading, setContractsLoading] = useState(true)
   const [files,       setFiles]       = useState([])
   const [error,       setError]       = useState('')
@@ -24,8 +25,9 @@ export default function CreateTicketPage() {
   useEffect(() => {
     api.myContracts()
       .then(data => {
-        setContracts(data.contracts)
-        if (data.contracts.length === 1) setContractId(String(data.contracts[0].id))
+        setActive(data.active)
+        setInactive(data.inactive)
+        if (data.active.length === 1) setContractId(String(data.active[0].id))
       })
       .catch(err => setError(err.message))
       .finally(() => setContractsLoading(false))
@@ -64,7 +66,6 @@ export default function CreateTicketPage() {
     try {
       const ticket = await api.createTicket({ subject, description, priority, contract_id: Number(contractId) })
 
-      // Upload attachments sequentially
       for (const file of files) {
         await api.uploadAttachment(ticket.id, file).catch(() => {})
       }
@@ -82,6 +83,86 @@ export default function CreateTicketPage() {
     }
   }
 
+  // Loading state
+  if (contractsLoading) {
+    return (
+      <>
+        <div className="page-header">
+          <h1 className="page-title">New Ticket</h1>
+          <Link to="/tickets" className="btn btn-secondary">Cancel</Link>
+        </div>
+        <div style={{ textAlign: 'center', padding: 48 }}><span className="spinner" /></div>
+      </>
+    )
+  }
+
+  // No active contract — block form, show warning + expired contracts
+  if (active.length === 0) {
+    return (
+      <>
+        <div className="page-header">
+          <h1 className="page-title">New Ticket</h1>
+          <Link to="/tickets" className="btn btn-secondary">Cancel</Link>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="alert alert-error" style={{ marginBottom: inactive.length ? 20 : 0 }}>
+              <strong>No active support contract.</strong> You cannot open a ticket without a valid contract.
+              Please contact your account manager to renew or activate a contract.
+            </div>
+
+            {inactive.length > 0 && (
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--color-muted)' }}>
+                  Previous contracts
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {inactive.map(c => {
+                    const isExpired = c.end_date && new Date(c.end_date) < new Date()
+                    return (
+                      <div key={c.id} style={{
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 6,
+                        padding: '10px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        flexWrap: 'wrap',
+                      }}>
+                        <span style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: 14 }}>
+                          {c.contract_code}
+                        </span>
+                        <span style={{ fontSize: 12, color: 'var(--color-muted)', textTransform: 'capitalize' }}>
+                          {TIER_LABELS[c.tier] ?? c.tier}
+                        </span>
+                        <span style={{ fontSize: 12, color: 'var(--color-muted)' }}>
+                          {c.start_date?.slice(0, 10)} — {c.end_date?.slice(0, 10) ?? 'ongoing'}
+                        </span>
+                        {isExpired && (
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px',
+                                         borderRadius: 999, background: '#fee2e2', color: '#dc2626' }}>
+                            Expired
+                          </span>
+                        )}
+                        {!isExpired && (
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px',
+                                         borderRadius: 999, background: '#f1f5f9', color: 'var(--color-muted)' }}>
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Normal form
   return (
     <>
       <div className="page-header">
@@ -93,32 +174,24 @@ export default function CreateTicketPage() {
         <div className="card-body">
           {error && <div className="alert alert-error">{error}</div>}
 
-          {/* No active contract warning */}
-          {!contractsLoading && contracts.length === 0 && (
-            <div className="alert alert-error" style={{ marginBottom: 16 }}>
-              No active contract found for your account. Please contact your account manager before opening a ticket.
-            </div>
-          )}
-
           <form onSubmit={handleSubmit}>
-            {/* Contract selector */}
+            {/* Contract */}
             <div className="form-group">
               <label className="form-label" htmlFor="contract">Support Contract *</label>
-              {contractsLoading ? (
-                <span className="spinner" />
-              ) : contracts.length === 1 ? (
+              {active.length === 1 ? (
                 <div style={{ fontSize: 14, padding: '8px 0' }}>
-                  <strong style={{ fontFamily: 'monospace' }}>{contracts[0].contract_code}</strong>
+                  <strong style={{ fontFamily: 'monospace' }}>{active[0].contract_code}</strong>
                   {' '}
-                  <span style={{ fontSize: 12, color: 'var(--color-muted)', textTransform: 'capitalize' }}>
-                    ({TIER_LABELS[contracts[0].tier] ?? contracts[0].tier})
+                  <span style={{ fontSize: 12, color: 'var(--color-muted)' }}>
+                    ({TIER_LABELS[active[0].tier] ?? active[0].tier})
+                    {active[0].end_date && ` · expires ${active[0].end_date.slice(0, 10)}`}
                   </span>
                 </div>
               ) : (
                 <select id="contract" className="form-control" value={contractId}
                   onChange={e => setContractId(e.target.value)}>
                   <option value="">— Select contract —</option>
-                  {contracts.map(c => (
+                  {active.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.contract_code} ({TIER_LABELS[c.tier] ?? c.tier})
                     </option>
@@ -140,9 +213,7 @@ export default function CreateTicketPage() {
                 placeholder="Brief description of the issue"
                 autoFocus
               />
-              {fieldErrors.subject && (
-                <div className="form-error">{fieldErrors.subject}</div>
-              )}
+              {fieldErrors.subject && <div className="form-error">{fieldErrors.subject}</div>}
             </div>
 
             <div className="form-group">
@@ -171,38 +242,28 @@ export default function CreateTicketPage() {
                 rows={8}
                 placeholder="Describe your issue in detail. Include any error messages, steps to reproduce, and expected vs actual behaviour."
               />
-              {fieldErrors.description && (
-                <div className="form-error">{fieldErrors.description}</div>
-              )}
+              {fieldErrors.description && <div className="form-error">{fieldErrors.description}</div>}
             </div>
 
             <div className="form-group">
               <label className="form-label">Attachments</label>
               <label className="file-input-label">
                 <span>📎 Add files</span>
-                <input
-                  type="file"
-                  multiple
-                  ref={fileRef}
-                  onChange={handleFiles}
-                />
+                <input type="file" multiple ref={fileRef} onChange={handleFiles} />
               </label>
               <div style={{ fontSize: 12, color: 'var(--color-muted)', marginTop: 4 }}>
                 Max 100 MB per file
               </div>
-
               {files.length > 0 && (
                 <div className="attachments-list" style={{ marginTop: 10 }}>
                   {files.map(f => (
                     <span key={f.name} className="attachment-chip">
                       📄 {f.name}
-                      <button
-                        type="button"
+                      <button type="button"
                         style={{ background: 'none', border: 'none', cursor: 'pointer',
                                  color: 'var(--color-muted)', fontSize: 12, padding: 0 }}
                         onClick={() => removeFile(f.name)}
-                        aria-label="Remove"
-                      >
+                        aria-label="Remove">
                         ✕
                       </button>
                     </span>
@@ -212,11 +273,7 @@ export default function CreateTicketPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading || contractsLoading || contracts.length === 0}
-              >
+              <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? <><span className="spinner" /> Submitting…</> : 'Submit Ticket'}
               </button>
               <Link to="/tickets" className="btn btn-secondary">Cancel</Link>

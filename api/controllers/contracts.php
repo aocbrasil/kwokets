@@ -77,15 +77,18 @@ function contracts_my(array $params): void
     $pdo      = db_connect();
 
     $stmt = $pdo->prepare(
-        "SELECT id, contract_code, tier, start_date, end_date, notes
+        "SELECT id, contract_code, tier, start_date, end_date, notes, is_active
          FROM tenant_contracts
-         WHERE tenant_id = ? AND is_active = TRUE
-         ORDER BY created_at DESC"
+         WHERE tenant_id = ?
+         ORDER BY is_active DESC, created_at DESC"
     );
     $stmt->execute([$tenantId]);
-    $contracts = $stmt->fetchAll();
+    $all = $stmt->fetchAll();
 
-    json_response(['contracts' => $contracts]);
+    $active   = array_values(array_filter($all, fn($c) => (bool)$c['is_active']));
+    $inactive = array_values(array_filter($all, fn($c) => !(bool)$c['is_active']));
+
+    json_response(['active' => $active, 'inactive' => $inactive]);
 }
 
 /* -----------------------------------------------------------------------
