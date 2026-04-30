@@ -56,7 +56,7 @@ export default function SearchPage() {
         <input
           type="search"
           className="form-control"
-          placeholder="Search tickets and messages… (min 2 characters)"
+          placeholder="Search by SR number, subject, or message content… (min 2 characters)"
           value={query}
           onChange={e => setQuery(e.target.value)}
           autoFocus
@@ -136,7 +136,7 @@ export default function SearchPage() {
                   )}
                   <span>Updated: {formatDate(r.updated_at)}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11 }}>
-                    Match in {r.match_source === 'subject' ? 'subject' : 'message'}
+                    Match in {r.match_source === 'subject' ? 'subject' : r.match_source === 'id' ? 'SR number' : 'message'}
                   </span>
                 </div>
               </div>

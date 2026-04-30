@@ -16,6 +16,21 @@ function search_tickets(array $params): void
 
     $pdo = db_connect();
 
+    // Numeric query → can match by ticket ID
+    $isNumeric = ctype_digit($q);
+
+    $idUnionSql = "
+                UNION ALL
+
+                SELECT
+                    t.id AS ticket_id,
+                    'SR ' || t.id::text AS snippet,
+                    1.5 AS rank,
+                    'id' AS match_source
+                FROM tickets t
+                WHERE t.id = ?
+    ";
+
     // Detect whether pg_trgm is available
     $hasTrgm = false;
     try {
@@ -60,6 +75,7 @@ function search_tickets(array $params): void
                 FROM ticket_messages m, q
                 WHERE to_tsvector('english', m.body) @@ q.tsq
                   AND m.source != 'system'
+                " . ($isNumeric ? $idUnionSql : '') . "
             ),
             best AS (
                 SELECT DISTINCT ON (ticket_id)
@@ -80,7 +96,7 @@ function search_tickets(array $params): void
             ORDER BY b.rank DESC, t.updated_at DESC
             LIMIT ?
         ";
-        $binds = [$q, $q, $limit];
+        $binds = array_merge([$q, $q], $isNumeric ? [(int)$q] : [], [$limit]);
     } else {
         // FTS-only fallback (no trigram)
         $sql = "
@@ -112,6 +128,7 @@ function search_tickets(array $params): void
                 FROM ticket_messages m, q
                 WHERE to_tsvector('english', m.body) @@ q.tsq
                   AND m.source != 'system'
+                " . ($isNumeric ? $idUnionSql : '') . "
             ),
             best AS (
                 SELECT DISTINCT ON (ticket_id)
@@ -132,7 +149,7 @@ function search_tickets(array $params): void
             ORDER BY b.rank DESC, t.updated_at DESC
             LIMIT ?
         ";
-        $binds = [$q, $limit];
+        $binds = array_merge([$q], $isNumeric ? [(int)$q] : [], [$limit]);
     }
 
     try {

@@ -6,9 +6,10 @@ RUN apk add --no-cache postgresql-dev libpq \
  && apk del postgresql-dev
 
 # Copy application
-COPY api/      /var/www/api/
-COPY cron/     /var/www/cron/
-COPY storage/  /var/www/storage/
+COPY api/        /var/www/api/
+COPY cron/       /var/www/cron/
+COPY migrations/ /var/www/migrations/
+COPY storage/    /var/www/storage/
 
 RUN mkdir -p /var/www/storage/attachments
 
